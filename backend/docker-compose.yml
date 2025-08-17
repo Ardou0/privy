@@ -1,0 +1,57 @@
+services:
+  # Service WebSocket
+  websocket:
+    image: node:24
+    container_name: privy_websocket_service
+    working_dir: /usr/src/app
+    volumes:
+      - ./websocket:/usr/src/app
+    command: bash -c "npm install && npm run dev"
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+
+  # Service API RESTful
+  api:
+    image: node:24
+    container_name: privy_api_service
+    working_dir: /usr/src/app
+    volumes:
+      - ./api:/usr/src/app
+    command: bash -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+
+  # Service MySQL
+  mysql_db:
+    image: mysql:5.7
+    container_name: privy_mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./db/architecture.sql:/docker-entrypoint-initdb.d/2-architecture.sql
+
+  # Service phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: privy_phpmyadmin
+    environment:
+      PMA_HOST: ${PMA_HOST}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql_db
+
+volumes:
+  db_data:
