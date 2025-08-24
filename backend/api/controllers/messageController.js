@@ -9,7 +9,7 @@ const sendMessage = async (req, res) => {
   try {
     // Vérifier si la conversation existe
     const conversation = await Conversation.findById(conversationId);
-    
+
     if (!conversation) {
       return res.status(404).json({ error: 'Conversation non trouvée' });
     }
@@ -27,19 +27,22 @@ const sendMessage = async (req, res) => {
 };
 
 const getMessages = async (req, res) => {
-  const { conversationId } = req.params;
-
+  console.log('Fetching messages for conversation:', req.params);
+  const { conversationId, before } = req.params;
+  const userId = req.user.user_id
   try {
     // Vérifier si la conversation existe
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
+    const conversation= await Conversation.findById(conversationId);
+    if (!conversation || (conversation.creator_id !== userId && conversation.participant_id !== userId)) {
       return res.status(404).json({ error: 'Conversation non trouvée' });
     }
+
     // Récupérer les messages de la conversation
-    const messages = await Message.findByConversationId(conversationId);
+    const messages = await Message.findPaginated(conversation.conversation_id, 50, before ? parseInt(before) : null);
     res.json(messages);
   } catch (error) {
     res.status(500).json({ error: 'Erreur lors de la récupération des messages' });
+    console.error('Erreur lors de la récupération des messages:', error);
   }
 };
 

@@ -31,12 +31,6 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-const pool = require("./config/db")
-
-app.get("/", async (req, res) => {
-  const [result] = await pool.query(
-    'SELECT * FROM Users',
-    []
-  );
-  res.json(result)
-})
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ message: 'pong' });
+});

@@ -10,6 +10,7 @@ const handleMessage = async (ws, { conversationId, messageContent }, activeRooms
         return;
     }
     const senderId = ws.user.user_id;
+    const senderPseudo = ws.user.pseudo;
     if (!conversationId || !messageContent) {
         ws.send(JSON.stringify({
             type: 'error',
@@ -28,7 +29,7 @@ const handleMessage = async (ws, { conversationId, messageContent }, activeRooms
             type: 'newMessage',
             data: {
                 conversationId,
-                senderId,
+                sender: { user_id: senderId, pseudo: senderPseudo },
                 messageContent,
                 timestamp: Date.now()
             }

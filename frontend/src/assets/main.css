@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: 'Bebas Neue';
+    src: url('./title.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--white);
+}
+
+button {cursor: pointer;}
+
+#app {
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-color: var(--background);
+}
+
+:root {
+    /* CSS HEX */
+    --background: rgb(10, 0, 16);
+    --higtlight: #ff9a3cff;
+    --highlight-tempered: rgba(255, 154, 60, 0.3);
+    --white: #ffffffff;
+}

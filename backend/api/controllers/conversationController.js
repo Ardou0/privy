@@ -24,6 +24,21 @@ const getConversations = async (req, res) => {
   }
 };
 
+const getConversation = async (req, res) => {
+  const userId = req.user.user_id;
+  const { conversationId } = req.params;
+  try {
+    const conversations = await Conversation.findById(conversationId);
+    if (!conversations || (conversations.creator_id !== userId && conversations.participant_id !== userId)) {
+      return res.status(404).json({ error: 'Conversation non trouvée' });
+    }
+
+    res.json(conversations);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des conversations' });
+  }
+};
+
 const sendInvitation = async (req, res) => {
   const { pseudo, key } = req.body;
   const fromUserId = req.user.user_id;
@@ -45,7 +60,7 @@ const getInvitations = async (req, res) => {
   const userId = req.user.user_id;
   try {
     const invitations = await Conversation.findInvitationsByUser(userId);
-    res.json({ invitations });
+    res.json(invitations);
   } catch (error) {
     res.status(500).json({ error: 'Erreur lors de la récupération des invitations' });
   }
@@ -71,4 +86,4 @@ const respondToInvitation = async (req, res) => {
   }
 };
 
-module.exports = { createConversation, getConversations, sendInvitation, getInvitations, respondToInvitation };
+module.exports = { createConversation, getConversations, getConversation, sendInvitation, getInvitations, respondToInvitation };

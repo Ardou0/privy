@@ -7,6 +7,8 @@ CREATE TABLE Users (
     salt VARBINARY(255) NOT NULL,
     hashed_password VARBINARY(255) NOT NULL,
     active SMALLINT NOT NULL DEFAULT 1,
+    hide SMALLINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (public_key(255))
 );
 

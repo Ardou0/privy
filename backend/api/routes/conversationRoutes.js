@@ -5,10 +5,11 @@ const authenticateToken = require('../auth');
 
 router.post('/', authenticateToken, conversationController.createConversation);
 router.get('/', authenticateToken, conversationController.getConversations);
-// New: Send invitation to talk
-router.post('/invite', authenticateToken, conversationController.sendInvitation);
 // New: Get all invitations for the user
 router.get('/invitations', authenticateToken, conversationController.getInvitations);
+router.get('/:conversationId', authenticateToken, conversationController.getConversation);
+// New: Send invitation to talk
+router.post('/invite', authenticateToken, conversationController.sendInvitation);
 // Handle response to an invitation
 router.post('/invitations/:invitationId/respond', authenticateToken, conversationController.respondToInvitation);
 

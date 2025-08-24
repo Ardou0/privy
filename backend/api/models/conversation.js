@@ -18,7 +18,7 @@ const Conversation = {
   },
   findByUserId: async (userId) => {
     const [rows] = await pool.query(
-      'SELECT * FROM Conversations WHERE creator_id = ? OR participant_id = ?',
+      'SELECT c.*, creator.pseudo AS creator_pseudo, participant.pseudo AS participant_pseudo FROM Conversations c JOIN Users creator ON c.creator_id = creator.user_id JOIN Users participant ON c.participant_id = participant.user_id WHERE c.creator_id = ? OR c.participant_id = ?;',
       [userId, userId]
     );
     return rows;

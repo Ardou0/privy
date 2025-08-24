@@ -47,18 +47,19 @@ const remove = async (req, res) => {
 
 const search = async (req, res) => {
     const { pseudo } = req.params;
-    console.log(pseudo);
+    const method = req.query.method
     // Vérification des champs requis
     if (!pseudo) {
         return res.status(400).json({ error: 'Le pseudo est requis.' });
     }
 
     try {
-        const user = await User.findByPseudo(pseudo);
-        if (!user) {
+        console.log('Searching for user:', pseudo, 'with method:', method);
+        const users = await User.searchUsers(pseudo, method);
+        if (!users) {
             return res.status(404).json({ error: 'Utilisateur non trouvé.' });
         }
-        res.status(200).json({name: user.pseudo, public_key: user.public_key});
+        res.status(200).json(users);
     } catch (error) {
         res.status(500).json({ error: 'Erreur interne lors de la recherche de l\'utilisateur.' });
     }

@@ -8,14 +8,27 @@ const Message = {
     );
     return result.insertId;
   },
-  findByConversationId: async (conversationId) => {
-    const [rows] = await pool.query(
-      'SELECT * FROM Messages WHERE conversation_id = ?',
-      [conversationId]
-    );
+  
+  // New paginated method
+  findPaginated: async (conversationId, limit = 50, beforeMessageId = null) => {
+    let query = `
+      SELECT * FROM Messages
+      WHERE conversation_id = ?
+    `;
+    const params = [conversationId];
+
+    // If beforeMessageId is provided, only get messages with id < beforeMessageId
+    if (beforeMessageId) {
+      query += ' AND message_id < ?';
+      params.push(beforeMessageId);
+    }
+
+    query += ' ORDER BY message_id DESC LIMIT ?';
+    params.push(limit);
+
+    const [rows] = await pool.query(query, params);
     return rows;
-  },
-  // Ajoutez d'autres méthodes selon vos besoins
+  }
 };
 
 module.exports = Message;
