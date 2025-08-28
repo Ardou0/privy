@@ -75,6 +75,7 @@ const handleRegister = async () => {
                     <p class="mb-3" style="color: var(--white); opacity: 0.9;">
                         <span class="font-semibold" style="color: var(--higtlight);">Vos clés cryptographiques</span>
                         sont générées lors de l'inscription :
+                    </p>
                     <ul class="pl-5 mb-3" style="color: var(--white); opacity: 0.9;">
                         <li><span class="font-medium">Clé publique</span> : partagée avec le serveur pour chiffrer vos
                             messages.</li>
@@ -84,7 +85,6 @@ const handleRegister = async () => {
                             </span>. Sans elle, vous perdrez l'accès à vos données en cas de changement d'appareil.
                         </li>
                     </ul>
-                    </p>
                     <p class="font-medium" style="color: var(--white);">
                         Vous êtes <span class="font-semibold" style="color: var(--higtlight);">responsable de la
                             sauvegarde de vos clés</span>.

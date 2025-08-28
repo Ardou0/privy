@@ -57,9 +57,8 @@ CREATE TABLE Invitations (
     creator_id INT,
     participant_id INT,
     status ENUM('pending', 'accepted', 'declined') NOT NULL DEFAULT 'pending',
-    payload VARBINARY(255) NOT NULL,
+    payload TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (creator_id) REFERENCES Users(user_id),
-    FOREIGN KEY (participant_id) REFERENCES Users(user_id),
-    UNIQUE (creator_id, participant_id)
+    FOREIGN KEY (participant_id) REFERENCES Users(user_id)
 );

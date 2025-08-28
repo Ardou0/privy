@@ -29,14 +29,15 @@ const props = defineProps({
                     </p>
                     <p v-if="!internet" class="mb-3" style="color: var(--white); opacity: 0.9;">
                         <strong>Comment activer votre connexion ?</strong>
+                    </p>
                     <ul class="pl-5 mb-3" style="color: var(--white); opacity: 0.9;">
                         <li>Vérifiez que le mode avion est désactivé.</li>
                         <li>Activez le Wi-Fi ou les données mobiles.</li>
                         <li>Redémarrez votre routeur si nécessaire.</li>
                     </ul>
-                    </p>
                     <p v-if="!api" class="mb-3" style="color: var(--white); opacity: 0.9;">
                         <strong>Contactez l'administrateur :</strong>
+                    </p>
                     <ul class="pl-5 mb-3" style="color: var(--white); opacity: 0.9;">
                         <li>
                             Site : <a href="https://armand-walle.com" target="_blank"
@@ -46,7 +47,6 @@ const props = defineProps({
                         </li>
                         <li>Discord: ardou_</li>
                     </ul>
-                    </p>
 
                     <p class="font-medium" style="color: var(--white);">
                         Cette application utilise un <span class="font-semibold"

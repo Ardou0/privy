@@ -38,7 +38,7 @@ const getMessages = async (req, res) => {
     }
 
     // Récupérer les messages de la conversation
-    const messages = await Message.findPaginated(conversation.conversation_id, 50, before ? parseInt(before) : null);
+    const messages = await Message.findPaginated(conversation.conversation_id, 10, before ? parseInt(before) : null);
     res.json(messages);
   } catch (error) {
     res.status(500).json({ error: 'Erreur lors de la récupération des messages' });

@@ -2,7 +2,7 @@ const pool = require('../config/db');
 
 const Message = {
   create: async (conversationId, senderId, messageContent) => {
-    const [result] = await pool.query(
+    const [result] = await pool.getPool().query(
       'INSERT INTO Messages (conversation_id, sender_id, message_content) VALUES (?, ?, ?)',
       [conversationId, senderId, messageContent]
     );
@@ -12,7 +12,7 @@ const Message = {
   // New paginated method
   findPaginated: async (conversationId, limit = 50, beforeMessageId = null) => {
     let query = `
-      SELECT * FROM Messages
+      SELECT m.*, u.pseudo FROM Messages m JOIN Users u ON m.sender_id = u.user_id
       WHERE conversation_id = ?
     `;
     const params = [conversationId];
@@ -26,7 +26,7 @@ const Message = {
     query += ' ORDER BY message_id DESC LIMIT ?';
     params.push(limit);
 
-    const [rows] = await pool.query(query, params);
+    const [rows] = await pool.getPool().query(query, params);
     return rows;
   }
 };

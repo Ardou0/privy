@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Enc from '@/composables/useEncryption';
 import { useWebSocketStore } from '@/stores/websocket';
 const token = localStorage.getItem('token'); // Assuming you store the token in localStorage
 
@@ -17,24 +18,47 @@ async function decryptMessages(messages, keyString) {
 
 const getMessages = async (conversationId) => {
     try {
-        const response = await axios.get(`/api/conversations/${conversationId}/messages/1`, {
+        const response = await axios.get(`/api/conversations/${conversationId}/messages/`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const keyString = localStorage.getItem(`conversations_${conversationId}_key`);
-        return await decryptMessages(response.data, keyString);
+        const keyString = localStorage.getItem('conversation_' + conversationId + '_key');
+
+        if (response.data.length === 0) return [];
+
+        const decryptedMessages = await Promise.all(
+            response.data.map(async (element) => {
+                const decrypted = await Enc.decryptMessage(element.message_content, keyString);
+                return { ...element, message_decrypted: decrypted };
+            })
+        );
+
+        return decryptedMessages;
     } catch (error) {
         console.error('Failed to fetch messages:', error);
         throw error;
     }
-}
+};
+
 
 const loadMoreMessages = async (conversationId, beforeMessageId) => {
     try {
         const response = await axios.get(`/api/conversations/${conversationId}/messages/${beforeMessageId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const keyString = localStorage.getItem(`conversations_${conversationId}_key`);
-        return await decryptMessages(response.data, keyString);
+        const keyString = localStorage.getItem('conversation_' + conversationId + '_key');
+
+        if (response.data.length === 0) return [];
+        
+        const decryptedMessages = await Promise.all(
+            response.data.map(async (element) => {
+                const decrypted = await Enc.decryptMessage(element.message_content, keyString);
+                return { ...element, message_decrypted: decrypted };
+            })
+        );
+
+        return decryptedMessages;
+
+        return await Enc.decryptMessage(response.data, keyString);
     } catch (error) {
         console.error('Failed to load more messages:', error);
         throw error;
@@ -43,19 +67,31 @@ const loadMoreMessages = async (conversationId, beforeMessageId) => {
 
 const sendMessage = async (conversationId, messageContent) => {
     try {
-        const keyString = localStorage.getItem(`conversations_${conversationId}_key`);
+        const keyString = localStorage.getItem('conversation_' + conversationId + '_key');
         if (!keyString) throw new Error('Clé de chiffrement manquante');
 
-        const encrypted = await encryptMessage(messageContent, keyString);
+        const encrypted = await Enc.encryptMessage(messageContent, keyString);
         const payload = {
             type: 'sendMessage',
-            data: { conversationId, encrypted }
+            data: { conversationId, messageContent: encrypted }
         }
 
         useWebSocketStore().sendMessage(payload);
-        return response.data;
     } catch (error) {
         console.error('Failed to send message:', error);
+        throw error;
+    }
+}
+
+const typingMessage = async (conversationId) => {
+    try {
+        const payload = {
+            type: 'userTyping',
+            data: { conversationId }
+        }
+        useWebSocketStore().sendMessage(payload);
+    } catch (error) {
+        console.error('Failed to send typing message:', error);
         throw error;
     }
 }
@@ -63,5 +99,6 @@ const sendMessage = async (conversationId, messageContent) => {
 export default {
     getMessages,
     loadMoreMessages,
-    sendMessage
+    sendMessage,
+    typingMessage
 };

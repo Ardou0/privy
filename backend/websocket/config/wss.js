@@ -81,12 +81,13 @@ wss.on('connection', async (ws, req) => {
       ws.on('message', async (data) => {
         try {
           const message = JSON.parse(data);
+          console.log('Message reçu:', message);
           switch (message.type) {
             case 'sendMessage':
               await messageService.handleMessage(ws, message.data, activeRooms, pendingNotifications);
               break;
-            case 'typing':
-              typingService.handleTyping(ws, message.conversationId, activeRooms);
+            case 'userTyping':
+              typingService.handleTyping(ws, message.data, activeRooms);
               break;
             case 'joinConversation':
               ws.conversationId = message.conversationId;

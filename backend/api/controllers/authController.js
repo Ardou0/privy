@@ -26,7 +26,7 @@ const register = async (req, res) => {
         return res.status(409).json({ error: 'Données erronées.' });
       }
     }
-
+    console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
     res.status(500).json({ error: 'Erreur interne lors de l\'enregistrement de l\'utilisateur.' });
   }
 };

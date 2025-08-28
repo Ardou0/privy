@@ -15,6 +15,7 @@ const verifyToken = async (token) => {
         if (result.status !== 200 || !result.data.user_id) {
           return reject(new Error('Utilisateur non trouvé ou erreur de vérification'));
         }
+        decoded.pseudo = result.data.pseudo;
         resolve(decoded);
       } catch (axiosError) {
         reject(axiosError);

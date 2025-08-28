@@ -43,14 +43,31 @@ const sendInvitation = async (req, res) => {
   const { pseudo, key } = req.body;
   const fromUserId = req.user.user_id;
   try {
+    const sender = await User.findById(fromUserId);
+    if (!sender) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    const sender_pseudo = sender.pseudo;
     // Check if pseudo exists
     const user = await User.findByPseudo(pseudo);
+    console.log(user);
     if (!user) {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
+    const existingInvitations = await Conversation.findInvitationsByUser(user.user_id);
+    await existingInvitations.push(...await Conversation.findInvitationsByUser(fromUserId));
+    
+    if (existingInvitations.some(inv => (inv.creator_pseudo == sender_pseudo || inv.participant_pseudo == sender_pseudo) && (inv.status == 'pending' || inv.status == 'accepted'))) {
+      return res.status(400).json({ error: 'Une invitation en attente existe déjà pour cet utilisateur' });
+    }
+    if (user.user_id == fromUserId) {
+      return res.status(400).json({ error: "Vous ne pouvez pas vous envoyer une invitation à vous-même" });
+    }
+    
     const invitationId = await Conversation.createInvitation(fromUserId, user.user_id, key);
     res.status(201).json({ invitation_id: invitationId });
   } catch (error) {
+    console.error('Error sending invitation:', error);
     res.status(500).json({ error: "Erreur lors de l'envoi de l'invitation" });
   }
 };
@@ -76,10 +93,10 @@ const respondToInvitation = async (req, res) => {
     if (result.status === 'not_found') {
       return res.status(404).json({ error: 'Invitation not found or unauthorized' });
     }
-    if (response === 'accepted' && result.conversation_id) {
-      return res.json({ message: 'Invitation accepted, conversation created', conversation_id: result.conversation_id });
+    if (response == 'accepted' && result.conversation_id) {
+      return res.status(201).json({ message: 'Invitation accepted, conversation created', conversation_id: result.conversation_id });
     }
-    return res.json({ message: 'Invitation response recorded', status: response });
+    return res.status(200).json({ message: 'Invitation response recorded', status: response });
   } catch (error) {
     console.error('Error responding to invitation:', error);
     res.status(500).json({ error: 'Erreur lors de la réponse à l\'invitation' });

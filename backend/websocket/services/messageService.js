@@ -1,15 +1,17 @@
 const axios = require('axios');
 const addNotification = require('../services/notificationService');
+const { parse } = require('dotenv');
 require('dotenv').config();
 const API_URL = process.env.API_URL || 'http://localhost:3000/api';
 
 const handleMessage = async (ws, { conversationId, messageContent }, activeRooms, pendingNotifications) => {
-    const room = activeRooms.get(conversationId);
+    const room = await activeRooms.get(String(conversationId));
     if (!room) {
         console.error(`Aucune room active pour l'ID : ${conversationId}`);
         return;
     }
     const senderId = ws.user.user_id;
+    console.log(ws.user)
     const senderPseudo = ws.user.pseudo;
     if (!conversationId || !messageContent) {
         ws.send(JSON.stringify({
@@ -18,6 +20,7 @@ const handleMessage = async (ws, { conversationId, messageContent }, activeRooms
         }));
         return;
     }
+    console.log(`Message reçu de ${senderId} pour la conversation ${conversationId} : ${messageContent}`);
     try {
         const token = ws.user.token;
         await axios.post(
@@ -33,11 +36,6 @@ const handleMessage = async (ws, { conversationId, messageContent }, activeRooms
                 messageContent,
                 timestamp: Date.now()
             }
-        };
-        const room = activeRooms.get(conversationId);
-        if (!room) {
-            console.error(`Aucune room active pour l'ID : ${conversationId}`);
-            return;
         }
         room.forEach((client, userId) => {
             client.send(JSON.stringify(message));

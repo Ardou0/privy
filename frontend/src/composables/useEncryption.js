@@ -41,13 +41,14 @@ const decryptMessage = async (ciphertextB64, keyString) => {
         false,
         ['decrypt']
     );
-    const dec = new TextDecoder();
+    
     const plaintext = await window.crypto.subtle.decrypt(
         { name: 'AES-GCM', iv },
         key,
         ciphertext
     );
-    return dec.decode(plaintext);
+    let decoded = new TextDecoder('utf-8').decode(new Uint8Array(plaintext));
+    return decoded;
 };
 
 const generateSymmetricKey = async () => {
@@ -80,7 +81,7 @@ const generateKeyPair = async () => {
             window.crypto.subtle.exportKey("spki", keyPair.publicKey),
             window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey),
         ]);
-        
+
         const publicKeyStr = arrayBufferToBase64(publicKeyData);
         const privateKeyStr = arrayBufferToBase64(privateKeyData);
 
@@ -94,7 +95,12 @@ const generateKeyPair = async () => {
 };
 
 const arrayBufferToBase64 = (buffer) => {
-    return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
 };
 
 const decryptKey = async (ciphertextB64) => {
@@ -123,6 +129,7 @@ const decryptKey = async (ciphertextB64) => {
         privateKey,
         ciphertext
     );
+    // Retournez directement la clé symétrique en base64
     return btoa(String.fromCharCode(...new Uint8Array(plaintextBuffer)));
 };
 
@@ -130,7 +137,6 @@ const encryptKey = async (symmetricKey, publicKeyStr) => {
     if (!isBase64(publicKeyStr)) {
         throw new Error("Invalid base64 public key");
     }
-    const enc = new TextEncoder();
     const publicKey = await window.crypto.subtle.importKey(
         "spki",
         Uint8Array.from(atob(publicKeyStr), c => c.charCodeAt(0)),
@@ -141,12 +147,14 @@ const encryptKey = async (symmetricKey, publicKeyStr) => {
         false,
         ["encrypt"]
     );
+    // Décodez la clé symétrique de base64 en bytes
+    const symmetricKeyBytes = Uint8Array.from(atob(symmetricKey), c => c.charCodeAt(0));
     const ciphertext = await window.crypto.subtle.encrypt(
         {
             name: "RSA-OAEP",
         },
         publicKey,
-        enc.encode(symmetricKey)
+        symmetricKeyBytes
     );
     return btoa(String.fromCharCode(...new Uint8Array(ciphertext)));
 };
@@ -159,3 +167,28 @@ export default {
     decryptKey,
     encryptKey
 };
+
+async function testFullFlow() {
+    try {
+        const symmetricKey = await generateSymmetricKey();
+        const publicKey = localStorage.getItem('publicKey');
+
+        console.log("Symmetric key:", symmetricKey);
+        console.log("Public key:", publicKey);
+
+        const encryptedKey = await encryptKey(symmetricKey, publicKey);
+        console.log("Encrypted key:", encryptedKey);
+
+        const decryptedKey = await decryptKey(encryptedKey);
+        console.log("Decrypted key:", decryptedKey);
+
+        if (symmetricKey !== decryptedKey) {
+            console.error("Keys do not match!");
+        } else {
+            console.log("Success: keys match!");
+        }
+    } catch (e) {
+        console.error("Error:", e);
+    }
+}
+// testFullFlow(); // Décommentez pour exécuter le test complet
