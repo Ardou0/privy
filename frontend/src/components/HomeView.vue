@@ -34,6 +34,7 @@ function formatDate(dateString) {
     minute: '2-digit'
   })
 }
+
 function hasNewMessages(conv) {
   const lastMessageId = Math.floor(new Date(conv.last_message).getTime() / 1000);
   const storedLastMessageId = parseInt(localStorage.getItem(`last_message_conversation_${conv.conversation_id}`));
@@ -53,7 +54,14 @@ async function fetchConversations() {
       localStorage.removeItem(awaitingKey)
     }
   })
-  conversations.value = data
+  conversations.value = data;
+  if(localStorage.getItem("wrong_key") && localStorage.getItem("wrong_key") > 1) {
+    toast.error("La clé de conversation enregistrée est invalide ou n'existe pas. Veuillez l'importer dans votre profil.", {
+      position: "top-right",
+      autoClose: 10000,
+    });
+    localStorage.removeItem("wrong_key");
+  }
 }
 
 async function fetchInvitations() {

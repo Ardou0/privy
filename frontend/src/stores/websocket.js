@@ -32,6 +32,7 @@ export const useWebSocketStore = defineStore('websocket', {
 
             setTimeout(() => {
                 this.toastId = null; // Réinitialiser l'ID du toast après 5 secondes
+                window.location.href = '/'; 
             }, error[1]);
         },
 

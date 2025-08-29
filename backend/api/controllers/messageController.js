@@ -1,12 +1,24 @@
 const Message = require('../models/message');
 const Conversation = require('../models/conversation');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const sendMessage = async (req, res) => {
   const { conversationId } = req.params;
   const { messageContent } = req.body;
+  
+  const authMessage = req.headers['authorization-origin'];
+  const messageToken = authMessage && authMessage.split(' ')[1];
+  if (!messageToken) return res.status(401).json({ error: 'Token manquant' });
+
   const senderId = req.user.user_id;
-  console.log('Sending message:', { conversationId, messageContent, senderId });
+  
   try {
+    jwt.verify(messageToken, process.env.MESSAGE_TOKEN_SECRET, (err, decoded) => {
+      if (err || decoded.origin !== 'message') {
+        return res.status(403).json({ error: 'Token invalide' });
+      }
+    });
     // Vérifier si la conversation existe
     const conversation = await Conversation.findById(conversationId);
 
@@ -27,7 +39,6 @@ const sendMessage = async (req, res) => {
 };
 
 const getMessages = async (req, res) => {
-  console.log('Fetching messages for conversation:', req.params);
   const { conversationId, before } = req.params;
   const userId = req.user.user_id
   try {

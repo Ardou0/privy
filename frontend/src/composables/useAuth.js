@@ -17,15 +17,23 @@ const login = async ({ nickname, password }) => {
     }
 }
 
-const logout = async () => {
+const logout = () => {
     try {
         localStorage.removeItem('token');
-        return true;
+        localStorage.removeItem('publicKey');
+        localStorage.removeItem('privateKey');
+        // Supprimer toutes les clés de conversation
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('conversation_') && key.endsWith('_key')) {
+                localStorage.removeItem(key);
+            }
+        });
+        window.location.href = '/login'; // Rediriger vers la page de login
     } catch (error) {
         console.error('Logout failed:', error);
         throw error;
     }
-}
+};
 
 const register = async (nickname, password, pubKey) => {
     try {

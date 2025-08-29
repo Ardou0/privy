@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+require('dotenv').config();
 
 const register = async (req, res) => {
   const { pseudo, public_key, password } = req.body;

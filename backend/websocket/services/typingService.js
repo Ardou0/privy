@@ -2,7 +2,6 @@
 let typingTimers = {};
 
 const handleTyping = (ws, { conversationId }, activeRooms) => {
-  console.log(`Utilisateur ${ws.user.user_id} tape dans la conversation ${conversationId}`);
   const room = activeRooms.get(String(conversationId));
   if (!room) return;
   room.forEach((client, userId) => {

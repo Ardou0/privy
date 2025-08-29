@@ -1,5 +1,6 @@
 import axios from 'axios';
 import useEncryption from './useEncryption';
+import { useWebSocketStore } from '../stores/websocket'
 const token = localStorage.getItem('token'); // Assuming you store the token in localStorage
 
 const getConversations = async () => {
@@ -54,7 +55,7 @@ const sendInvitation = async (username, recipientPublicKey) => {
         });
         if (response.status == 201) {
             console.log(response.data.invitation_id)
-            localStorage.setItem('awaiting_invitation_'+username, symmetricKey);
+            localStorage.setItem('awaiting_invitation_' + username, symmetricKey);
             return true;
         } else {
             console.error('Invitation failed:', response.data.error || response.statusText);
@@ -77,6 +78,8 @@ const acceptInvitation = async (invitationId, encryptedKey) => {
         });
         if (response.status == 201) {
             localStorage.setItem(`conversation_${response.data.conversation_id}_key`, symmetricKey);
+            const wsStore = useWebSocketStore();
+            await wsStore.reconnect();
             return response.data.conversation_id;
         } else {
             console.error('Accepting invitation failed:', response.data.error || response.statusText);

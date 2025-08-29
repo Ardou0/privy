@@ -95,6 +95,14 @@ async function loadConversation() {
         loading.value = false;
         scrollToBottom();
     } catch (err) {
+        if (err.message == "Invalid base64 key") {
+            let value = localStorage.getItem(`wrong_key`);
+            if (value) {
+                localStorage.setItem(`wrong_key`, parseInt(value) + 1);
+            } else {
+                localStorage.setItem(`wrong_key`, '1');
+            }
+        }
         error.value = 'Erreur lors du chargement.';
         router.replace('/');
     }

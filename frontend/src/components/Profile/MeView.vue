@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
+import Auth from '../../composables/useAuth'
 import Profile from '../../composables/useProfile'
 
 const router = useRouter()
@@ -16,6 +17,7 @@ const showImportKeyPopup = ref(false)
 const pseudo = ref(localStorage.getItem("pseudo"))
 const showImportConvKeysPopup = ref(false)
 const showDeleteAccountPopup = ref(false)
+const showLogoutPopup = ref(false)
 const fileInputKey = ref(null)
 const fileInputConvKeys = ref(null)
 const deletePassword = ref('')
@@ -116,6 +118,15 @@ async function deleteAccount() {
     closeDeleteAccountPopup()
 }
 
+async function logout() {
+    try {
+        await Auth.logout();
+    } catch (error) {
+        toast.error("Erreur lors de la déconnexion.", { position: "top-right", autoClose: 3000 })
+    }
+    closeLogoutPopup()
+}
+
 // Fonction pour déclencher l'import de paire de clés
 function triggerKeyPairImport() {
     fileInputKey.value.click()
@@ -162,6 +173,15 @@ function openDeleteAccountPopup() {
 function closeDeleteAccountPopup() {
     showDeleteAccountPopup.value = false
 }
+
+function openLogoutPopup() {
+    showLogoutPopup.value = true
+}
+
+function closeLogoutPopup() {
+    showLogoutPopup.value = false
+}
+
 </script>
 
 <template>
@@ -276,6 +296,22 @@ function closeDeleteAccountPopup() {
         <!-- Séparateur -->
         <div class="my-4 border-t" style="border-color: var(--higtlight); opacity: 0.3;"></div>
 
+        <!-- Se déconnecter -->
+        <div class="pt-2">
+            <button @click="openLogoutPopup"
+                class="w-full p-3 rounded-lg text-left flex items-center justify-between transition-colors hover:bg-opacity-80 mb-3"
+                style="background-color: var(--highlight-tempered); color: var(--white); border: 1px solid var(--higtlight);">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Se déconnecter</span>
+                </div>
+            </button>
+        </div>
+
         <!-- Supprimer mon compte (en rouge) -->
         <div class="pt-2">
             <button @click="openDeleteAccountPopup"
@@ -291,6 +327,35 @@ function closeDeleteAccountPopup() {
                     <span>Supprimer mon compte</span>
                 </div>
             </button>
+        </div>
+
+        <!-- Popup Se Déconnecter -->
+        <div v-if="showLogoutPopup"
+            class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @click.self="closeLogoutPopup">
+            <div class="bg-background rounded-lg p-6 max-w-sm w-full mx-4" style="border: 1px solid rgba(255, 165, 0, 0.5);">
+                <h2 class="text-xl font-bold mb-4 text-center"
+                    style="color: var(--white); font-family: 'Bebas Neue', sans-serif;">
+                    Se déconnecter
+                </h2>
+                <p class="text-center mb-4" style="color: var(--white); opacity: 0.9;">
+                    Attention : il est impératif d'avoir sauvegardé toutes vos clés de conversation et votre paire de clés.
+                    Une fois déconnecté, vos clés locales seront supprimées et il faudra les importer à nouveau pour les réutiliser.
+                </p>
+                <p class="text-center mb-4" style="color: var(--white); opacity: 0.9;">
+                    Souhaitez-vous vraiment vous déconnecter ?
+                </p>
+                <div class="flex justify-center space-x-4">
+                    <button @click="closeLogoutPopup" class="px-4 py-2 rounded-lg text-white"
+                        style="background-color: var(--highlight-tempered);">
+                        Annuler
+                    </button>
+                    <button @click="logout" class="px-4 py-2 rounded-lg text-white"
+                        style="background-color: rgba(255, 165, 0, 0.7);">
+                        Se déconnecter
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Popup Changer Mot de Passe -->
