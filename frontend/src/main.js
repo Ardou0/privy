@@ -9,11 +9,10 @@ import Vue3Toasity from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import { apiStatus } from './apiStatus'
 
-const internetAccess = navigator.onLine;
 const apiStatusCheck = await apiStatus.check();
-if (!internetAccess || !apiStatusCheck) {
+if (!apiStatusCheck) {
     console.error("No internet access. Please check your connection.");
-    import ('./components/NoInternetView.vue').then(({ default: NoInternet }) => {
+    import('./components/NoInternetView.vue').then(({ default: NoInternet }) => {
         const app = createApp(NoInternet, {
             internet: internetAccess,
             api: apiStatusCheck
@@ -22,12 +21,20 @@ if (!internetAccess || !apiStatusCheck) {
     });
 }
 else {
-    const app = createApp(App)
-    app.use(router)
-    app.use(createPinia())
+    const app = createApp(App);
+    app.use(router);
+    app.use(createPinia());
     app.use(Vue3Toasity)
-
-    // mount after the initial navigation is ready
-    await router.isReady()
-    app.mount('#app')
+    
+    app.mount('#app');
 }
+
+import { SafeArea } from 'capacitor-plugin-safe-area';
+
+SafeArea.getSafeAreaInsets().then((data) => {
+  const { insets } = data;
+  document.body.style.setProperty('--ion-safe-area-top', `${insets.top}px`);
+  document.body.style.setProperty('--ion-safe-area-right', `${insets.right}px`);
+  document.body.style.setProperty('--ion-safe-area-bottom', `${insets.bottom}px`);
+  document.body.style.setProperty('--ion-safe-area-left', `${insets.left}px`);
+});

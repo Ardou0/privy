@@ -32,9 +32,9 @@ const wss = new WebSocket.Server({ server });
 // Middleware d'authentification et gestion des connexions
 wss.on('connection', async (ws, req) => {
   try {
-    const token = process.env.PROD === 'true'
-      ? req.headers['sec-websocket-protocol']?.split('Bearer ')[1]
-      : new URL(req.url, `http://${req.headers.host}`).searchParams.get('token');
+    const token =
+      new URL(req.url, `http://${req.headers.host}`).searchParams.get('token') ||
+      req.headers['sec-websocket-protocol']?.split('Bearer ')[1];
     if (!token) {
       ws.close(1008, 'Token manquant');
       return;

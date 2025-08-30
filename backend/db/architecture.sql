@@ -27,7 +27,7 @@ CREATE TABLE Messages (
     conversation_id INT,
     sender_id INT,
     message_content TEXT NOT NULL,
-    timestamp TIMESTAMP NOT NULL,
+    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (conversation_id) REFERENCES Conversations(conversation_id),
     FOREIGN KEY (sender_id) REFERENCES Users(user_id)
 );

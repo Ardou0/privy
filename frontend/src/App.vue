@@ -1,26 +1,22 @@
 <template>
-  <div id="app">
-
-    <router-view />
-
-  </div>
+  <router-view v-if="routerReady" />
 </template>
 
 <script setup>
-import { toast } from 'vue3-toastify';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+const routerReady = ref(false);
 
-const notify = () => {
-  toast("Wow so easy !", {
-    autoClose: false,
-    hideProgressBar: true,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "dark",
-    toastId: "custom-id-yes",
-    position: toast.POSITION.BOTTOM_RIGHT,
+onMounted(() => {
+  router.isReady().then(() => {
+    routerReady.value = true;
   });
-};
-
+});
 </script>
+<style>
+.Toastify__toast {
+  top: calc(var(--safe-area-inset-top, 0px));
+  padding-top: calc(var(--ion-safe-area-top, 0px));
+}
+</style>

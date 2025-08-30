@@ -22,7 +22,9 @@ button {cursor: pointer;}
 
 #app {
     position: relative;
-    min-height: 100vh;
+    min-height: calc(100vh);
+    
+    padding-top: calc(var(--safe-area-inset-top, 0px));
     overflow-x: hidden;
     background-color: var(--background);
 }
@@ -33,4 +35,6 @@ button {cursor: pointer;}
     --higtlight: #ff9a3cff;
     --highlight-tempered: rgba(255, 154, 60, 0.3);
     --white: #ffffffff;
+    --safe-area-inset-top: 2.5rem;
+    --safe-area-inset-bottom: 1rem;
 }

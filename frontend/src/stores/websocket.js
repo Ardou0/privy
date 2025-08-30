@@ -32,7 +32,9 @@ export const useWebSocketStore = defineStore('websocket', {
 
             setTimeout(() => {
                 this.toastId = null; // Réinitialiser l'ID du toast après 5 secondes
-                window.location.href = '/'; 
+                if (error === this.errorToken) {
+                    window.location.href = '/';
+                }
             }, error[1]);
         },
 
@@ -45,8 +47,8 @@ export const useWebSocketStore = defineStore('websocket', {
                 this.socket.close();
                 this.socket = null;
             }
-            let url = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:3001';
-
+            let url = import.meta.env.VITE_WEBSOCKET_URL;
+            console.log("Connexion au WebSocket à l'URL:", );
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
