@@ -3,27 +3,18 @@ import { ref } from 'vue';
 import auth from '@/composables/useAuth';
 import Encryption from '@/composables/useEncryption';
 import { useRouter } from 'vue-router';
+import File from '@/composables/useFiles';
 const router = useRouter();
 const pseudo = ref('');
 const password = ref('');
 const hasReadTutorial = ref(false);
 // Fonctions existantes (inchangées)
 
-const downloadKeyPair = () => {
+const downloadKeyPair = async () => {
     const privateKey = localStorage.getItem('privateKey');
     const publicKey = localStorage.getItem('publicKey');
-    const blob = new Blob([
-        `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----\n` +
-        `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`
-    ], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'cles_utilisateur.pem';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const content = `-----BEGIN PUBLIC KEY-----\n${publicKey}\n-----END PUBLIC KEY-----\n` + `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`
+    await File.downloadFile(content, 'privy_keypair.pem');
 };
 
 const handleRegister = async () => {

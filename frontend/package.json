@@ -12,6 +12,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/filesystem": "^7.1.4",
     "@tailwindcss/vite": "^4.1.12",
     "axios": "^1.11.0",
     "capacitor-plugin-safe-area": "^4.0.0",

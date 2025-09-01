@@ -28,6 +28,26 @@ Welcome to the mobile packaging guide for Privy! This explains how to turn your 
     npx capacitor-assets generate
 	```
 
+4. **Add permissions**
+	```xml
+	<!-- Camera, Photos, input file -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Geolocation API -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" />
+    <!-- Network API -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Navigator.getUserMedia -->
+    <!-- Video -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Audio -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+	```
+	*Don't know why, but to get the app working with files permissions, just put them all.*
+
 4. **Open in Android Studio**
 	```sh
 	npx cap open android
