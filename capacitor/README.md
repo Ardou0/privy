@@ -1,80 +1,34 @@
-
 # Privy Mobile (Capacitor)
 
-Welcome to the mobile packaging guide for Privy! This explains how to turn your Vue 3 frontend into a real Android/iOS app using Capacitor.
+Instructions de packaging du client web Vue 3 en application mobile hybride via Capacitor.
 
----
+## Build et Synchronisation
 
-## 📦 How to Pack the App with Capacitor
+1.  Compiler le client :
+    ```sh
+    cd ../frontend
+    npm run build
+    ```
+2.  Copier les sources compilees :
+    ```sh
+    cp -r dist/* ../capacitor/www/
+    ```
+3.  Synchroniser le projet natif :
+    ```sh
+    cd ../capacitor
+    npx cap sync android
+    ```
+4.  Compiler avec Android Studio :
+    ```sh
+    npx cap open android
+    ```
 
-1. **Build the Frontend**
-	```sh
-	cd ../frontend
-	npm install
-	npm run build
-	```
-	This creates a production build in `dist/`.
+## Dette technique et securite
 
-2. **Copy Build to Capacitor**
-	```sh
-	cp -r dist/* ../capacitor/www/
-	```
-	(Or use a script to automate this step.)
+*   Sur-provisionnement de permissions : Le fichier AndroidManifest.xml demande des accès GPS (ACCESS_FINE_LOCATION), camera (CAMERA), et microphone (RECORD_AUDIO) qui ne sont pas utilises par l'application. Cette configuration provenait d'une tentative de resoudre des problemes d'acces aux fichiers locaux lors du developpement en activant l'ensemble des permissions standard.
 
-3. **Sync Capacitor**
-	```sh
-	cd ../capacitor
-	npx cap sync android
-    npx capacitor-assets generate
-	```
+## Retrospective
 
-4. **Add permissions**
-	```xml
-	<!-- Camera, Photos, input file -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!-- Geolocation API -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-feature android:name="android.hardware.location.gps" />
-    <!-- Network API -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Navigator.getUserMedia -->
-    <!-- Video -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Audio -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-	```
-	*Don't know why, but to get the app working with files permissions, just put them all.*
-
-4. **Open in Android Studio**
-	```sh
-	npx cap open android
-	```
-	Build and run the app on your device/emulator.
-
----
-
-## 🛠️ Troubleshooting
-
-- If you only see the background, check that all built files are in `www/` and asset paths are correct.
-- Make sure `capacitor.config.json` has `"webDir": "www"`.
-- Check router mode and asset paths for compatibility.
-
----
-
-## 🚧 Next Updates
-
-- Add iOS support and test on multiple devices
-- Automate build/copy process with scripts
-- Improve asset and font handling for mobile
-- Add splash screen
-
----
-
-## 📝 Final Note
-
-This mobile packaging is part of my learning journey. If you spot any issues or have tips for better mobile integration, let me know!
-
-Thanks for trying Privy on mobile! 🚀
+*   Principe du moindre privilege : Ne declarer que la permission INTERNET. Les permissions Camera, Audio ou Location doivent etre supprimees car elles entrainent un rejet systematique sur les stores.
+*   Permissions au runtime : Pour les besoins reels, interroger l'utilisateur dynamiquement au moment de l'action plutot que de declarer les permissions globalement au niveau du systeme d'exploitation.
+*   Automatisation : Configurer webDir sur ../frontend/dist dans la configuration Capacitor pour eviter la copie manuelle des builds.

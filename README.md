@@ -1,97 +1,37 @@
+# Privy - Messagerie securisee (Projet d'apprentissage)
 
-# Privy
+Derniere mise a jour (Retrospective) : Juillet 2026
 
-Welcome to Privy! This is my educational journey into building a secure messaging app from scratch. I'm a beginner, learning how to make "real" apps, and this project is my playground for exploring modern web, mobile, and security technologies.
+Note de contexte : Cette analyse technique a ete redigee a l'issue de ma premiere annee en ecole d'ingenieur en informatique. Elle constitue une mise en perspective critique de ce que j'ai appris au cours de cette annee par rapport au code de ce projet, que j'avais entierement concu avant d'entrer en ecole d'ingenieur.
 
----
+Ce projet est une preuve de concept (PoC) educative. Il presente d'importantes faiblesses de conception, de securite et de performances qui le rendent impropre a une utilisation en production ou a une maintenance a long terme.
 
-## 🚀 What is Privy?
+## Structure du projet
 
-Privy is a secure messaging application designed to experiment with:
-- End-to-end encryption for private conversations
-- Secure key exchange (Bluetooth planned(maybe))
-- Hybrid server communication (REST API + WebSocket)
-- Multi-platform support (web, mobile, desktop)
+*   [frontend/](frontend/README.md) : Client en Vue 3 (Vite, Pinia) package avec Capacitor pour mobile.
+*   [backend/](backend/README.md) : API REST (api/) et serveur WebSocket (websocket/).
+*   [capacitor/](capacitor/README.md) : Configuration de packaging mobile.
 
----
+## Stack technique
 
-## 🏗️ Project Structure
+*   Frontend : Vue 3, Vite, Pinia, Axios.
+*   Mobile Wrapper : Capacitor.
+*   Backend : Node.js, Express, ws.
+*   Base de donnees : MySQL 5.7.
 
-- **frontend/**: Vue 3 + Vite SPA for the client ([see its own README for details](./frontend/README.md))
-- **backend/**: Node.js/Express API & WebSocket server ([own README also](./backend/README.md))
-- **capacitor/**: Capacitor config for packaging the frontend as a mobile app
+## Dette technique et limites majeures
 
----
+1.  Stockage des cles : Les cles privees RSA et les cles symetriques sont stockees en clair dans le localStorage, exposant l'utilisateur aux failles XSS.
+2.  Performances reseau : Le serveur WebSocket n'a pas d'acces direct a la base de donnees et requete l'API REST toutes les 30 secondes pour chaque utilisateur connecte afin de valider le token JWT. De plus, le routeur frontend valide l'authentification a chaque changement de page.
+3.  Hachage bloquant : L'API utilise crypto.pbkdf2Sync avec 1 000 iterations. Ce traitement synchrone bloque le thread principal de Node.js lors des inscriptions et connexions.
+4.  Modele relationnel : La table Conversations restreint les echanges a un format strictement 1-on-1. Les groupes ne sont pas geres.
+5.  Gestion de fichiers : Le systeme prevoyait un decoupage en blocs de 255 octets stockes directement dans MySQL. Cette fonctionnalite n'est pas finalisee et les routes sont commentees.
 
-## 🛠️ Technology Choices
+## Retrospective et alternatives techniques
 
-- **Vue 3 + Vite**: Fast, modern frontend development
-- **Node.js + Express**: Simple, flexible backend
-- **WebSocket**: Real-time messaging
-- **MySQL**: Relational database for users, messages, and conversations
-- **Capacitor**: To package the frontend for iOS/Android
-- **(Maybe) Electron**: For desktop app, if it fits best
-
----
-
-## 🌱 How It Was Supposed to Be vs. How It Turned Out
-
-**The Plan:**
-- Fully decentralized key exchange (Bluetooth/NFC)
-- Bulletproof security everywhere
-- Seamless experience on all platforms
-
-**The Reality:**
-- Some features are still experimental or missing
-- Key management is not perfect (localStorage for now)
-- Security is a work in progress
-- The app works, but there are probably bugs and rough edges
-
----
-
-## 🔄 Big Interactions & Architecture
-
-- **User Auth:** Register/login, JWT tokens, (refresh token planned)
-- **Conversations:** Create, invite, accept/decline, encrypted messaging
-- **Encryption:** Symmetric keys for messages, asymmetric for key exchange
-- **WebSocket:** Real-time message delivery, typing indicators
-- **Mobile/Desktop:** Frontend can be packed for mobile (Capacitor) or desktop (Electron/other)
-
----
-
-## 🤔 Why This Project?
-
-I'm just a student, learning by doing. I wanted to understand how secure messaging apps work, and this project is my way to try building one from the ground up. It's not perfect, but every bug and challenge is a lesson.
-
----
-
-## 👨‍💻 Collaboration & Feedback
-
-This is a personal, educational project. I'm not looking for collaborators unless it becomes something really interesting. But if you find bugs, security issues, or have feedback, please let me know! I'll do my best to fix things and learn from your input.
-
----
-
-## 📚 More Info
-
-- For frontend details, see [frontend/README.md](./frontend/README.md)
-- For backend details, see [backend/README.md](./backend/README.md)
-
----
-
-## 🚧 Next Updates (General)
-
-Here are some general updates planned for both backend and frontend:
-
-- **Language manager**: Add support for multiple languages so everything isn't French only
-- **Better error handling and feedback**: Consistent, user-friendly errors and notifications
-- **Security improvements**: More robust authentication, encryption, and validation
-- **Performance optimizations**: Faster, smoother experience across all platforms
-- More improvements coming!
-
----
-
-## 📝 Final Note
-
-Privy is a learning project. There are probably many problems, but I'm here to learn and improve. If you spot anything wrong, let me know—I'll try to fix it!
-
-Thanks for checking out Privy! 🚀
+*   Securisation des cles : Stocker les cles dans IndexedDB via l'API Web Crypto avec l'option extractable positionnee a false, ou chiffrer la cle privee localement a l'aide d'un mot de passe utilisateur (derive via Argon2id).
+*   Securite : Remplacer PBKDF2 synchrone par un algorithme asynchrone (Argon2 ou bcrypt) pour eviter le blocage de l'Event Loop.
+*   Architecture temps reel : Valider les tokens localement sur le serveur WebSocket en partageant le secret de signature JWT, sans passer par des appels HTTP repetitifs vers l'API.
+*   Conception BDD : Utiliser une table d'association (Many-to-Many) ConversationParticipants pour integrer les groupes.
+*   Stockage de fichiers : Stocker les fichiers chiffres sur un espace de stockage externe (S3, disque local) et n'enregistrer que les metadonnees et l'URI chiffree en base de donnees.
+*   Gestion des etats : Utiliser des intercepteurs de requetes Axios plutot que de lire le token une unique fois au chargement des modules JS.

@@ -1,99 +1,38 @@
-# Privy Backend
+# Privy - Service Backend
 
-Welcome to the backend of Privy! This is the engine powering secure messaging, user management, and real-time communication for the app. Here’s a deep dive into the tech, architecture, and design choices behind the scenes.
+Ce dossier contient les services backend de Privy, divises en une API REST et un serveur WebSocket.
 
----
+Ce backend presente des lacunes de conception et de securite importantes et ne doit pas etre utilise en production.
 
-## 🏗️ Architecture Overview
+## Architecture
 
-- **Node.js + Express**: REST API for authentication, user profiles, conversations, and file management
-- **WebSocket (ws)**: Real-time messaging, typing indicators, notifications
-- **MySQL**: Relational database for users, messages, conversations, and files
-- **Docker**: Containerized for easy deployment and development
-- **(Future) Kubernetes**: Possible for scaling and orchestration—challenge accepted!
+*   API REST (api/) : Authentification, profils et gestion des invitations.
+*   Serveur WebSocket (websocket/) : Routage des messages en temps reel.
 
----
+## Dette technique et bugs critiques
 
-## 🗂️ Folder Structure
+### 1. API REST et Securite
+*   Blocage du thread principal : L'inscription et la connexion utilisent crypto.pbkdf2Sync (synchrone) avec 1 000 iterations, ce qui bloque la boucle d'evenements a chaque authentification.
+*   Crash du processus : Dans conversationController.js, si une invitation n'est pas trouvee ou invalide, respondToInvitation renvoie false. Le controleur lit result.status sur ce retour, provoquant une erreur TypeError non interceptee qui fait planter le serveur Node.js.
+*   Requetes SQL redondantes : Le middleware d'authentification interroge la base de donnees (User.exist) a chaque requete HTTP au lieu de se fier uniquement a la signature JWT.
 
-- **api/**: Main Express app, routes, controllers, models, config
-- **db/**: SQL schema and initialization scripts
-- **websocket/**: WebSocket server, authentication, services (messaging, typing, notifications)
-- **docker-compose.yml**: Docker setup for backend and database
-- **.env**: Environment variables for config and secrets
+### 2. WebSocket et reseau
+*   Polling d'authentification : Le serveur WebSocket effectue une requete HTTP externe vers l'API REST toutes les 30 secondes pour chaque client afin de verifier le token JWT.
+*   Nettoyage inefficace : A la deconnexion d'un client, le serveur parcourt l'ensemble des salons actifs en memoire (activeRooms.forEach) pour le supprimer, induisant une complexite de O(R) avec R le nombre de salons.
 
----
+### 3. Base de donnees
+*   Salons 1-on-1 uniques : La contrainte UNIQUE sur (creator_id, participant_id) dans la table Conversations empeche toute evolution vers des groupes de discussion.
+*   Stockage binaire : Table FileChunks prevue pour des blocs de 255 octets (VARBINARY(255)) stockes dans MySQL. Cette fonctionnalite a ete abandonnee et ses routes sont desactivees.
 
-## 🛠️ Technologies & Design Choices
+### 4. Docker
+*   Demarrage des conteneurs : Pas de sequence d'ordonnancement (depends_on) dans docker-compose.yml entre les serveurs et MySQL.
+*   Exposition réseau : Le port 3306 est expose directement sur l'hote.
+*   Obsoletence : Utilisation de MySQL 5.7 (EOL depuis fin 2023).
 
-- **Express**: Simple, flexible, and well-supported for REST APIs
-- **ws**: Lightweight WebSocket library for real-time features
-- **MySQL**: Chosen for reliability and relational data modeling
-- **JWT**: Secure user authentication and session management
-- **Docker**: Makes local dev and deployment easy; just run and go!
-- **Modular Structure**: Controllers, models, and routes are separated for clarity and maintainability
+## Retrospective et alternatives techniques
 
----
-
-## 🔄 Main Features & Interactions
-
-- **User Auth**: Register, login, JWT tokens, password hashing
-- **Conversations**: Create, invite, accept/decline, manage participants
-- **Messaging**: Send/receive messages, end-to-end encryption support
-- **File Handling**: Upload/download files in chunks
-- **WebSocket Events**: Real-time message delivery, typing notifications, room management
-- **Error Handling**: Centralized error handler for API responses
-
----
-
-## 🐳 Docker Support
-
-- The backend is fully containerized with Docker. Just use `docker-compose up` to start the API, WebSocket server, and MySQL database.
-- This makes it easy to develop, test, and deploy anywhere.
-- (Kubernetes support could be added later for scaling and orchestration—maybe as a future challenge!)
-
----
-
-## 📚 How to Run
-
-```sh
-# Start everything with Docker
-cd backend
-nano .env   # Set up your environment variables
-# Edit .env for your DB credentials and secrets
-
-docker-compose up      # Start API, WebSocket, and MySQL
-```
-
----
-
-## 🤔 Why This Stack?
-
-- I wanted to learn how to build a "real" backend for secure apps
-- Node.js and Express are beginner-friendly but powerful
-- MySQL is robust and easy to manage
-- Docker makes everything portable and reproducible
-- WebSocket adds the real-time magic
-
----
-
-
-## 🚧 Next Updates
-
-Here's what I plan to improve in the backend in the next Update:
-
-- **Refresh token implementation**: More robust authentication and session management
-- **Group conversations**: Support for multi-user chats and group management
-- **Better error handling**: More detailed and user-friendly error responses
-- **Rate limiting & security**: Protect against abuse and attacks
-- **Kubernetes support**: For scaling and orchestration (challenge!)
-- **Real implementation of file encoded transfer**: Actually fragment and transfer files securely between users. *(Note: This is not my preferred solution, as it raises many technical and moral questions—like how the DB can handle files it can't identify or parse, and whether it's right to store or transmit files without knowing their nature. Still, it's a technical challenge worth exploring!)*
-- More improvements coming!
-
----
-
-## 📝 Final Note
-
-This backend is a learning project. There are probably bugs, security holes, and things to improve. If you spot anything wrong, let me know—I'll try to fix it and learn from your feedback!
-
-Thanks for checking out the Privy backend! 🚀
+*   Crypto asynchrone : Utiliser argon2 ou bcrypt de maniere asynchrone pour liberer l'Event Loop de l'API.
+*   Architecture distribuee : Valider les JWT localement sur le serveur WebSocket sans appel HTTP vers l'API REST.
+*   Stockage externe : Stocker les fichiers chiffres sur disque ou stockage objet (S3), en ne gardant que l'URI de telechargement dans la base SQL.
+*   Groupes : Creer une table associative ConversationParticipants pour decorreler les utilisateurs des salons.
+*   Nettoyage O(1) : Enregistrer les salons rejoints sur l'objet de connexion du client pour cibler le nettoyage lors de la deconnexion.

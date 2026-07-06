@@ -1,85 +1,35 @@
-# Privy Frontend
+# Privy - Client Frontend
 
-> Welcome to the Privy frontend! This is the Vue 3 + Vite powered client for your secure messaging app. Here’s a breakdown of what’s inside and how it all fits together.
+Ce dossier contient l'interface utilisateur de Privy (Single Page Application sous Vue 3) et sa configuration Capacitor.
 
----
+## Structure
 
-## 🗂️ Folder Structure
+*   src/components/ : Vues et composants de l'interface.
+*   src/composables/ : Logique métier (useAuth, useEncryption, useConversations, useMessages).
+*   src/stores/ : Store Pinia pour le WebSocket.
 
-- **public/**: Static assets (favicon, etc.)
-- **src/**: All source code lives here
-  - **assets/**: CSS and fonts for a stylish UI
-  - **components/**: Vue components for each view and feature
-  - **composables/**: Reusable logic (authentication, encryption, conversations, etc.)
-  - **stores/**: Pinia store for websocket state
-  - **App.vue**: The root component
-  - **main.js**: App entry point
-  - **router.js**: Vue Router setup
+## Dette technique et defauts de conception
 
----
+### 1. Bug de connexion (Stale Token)
+*   Token non reactif : Le JWT est lu une seule fois au chargement du fichier dans useConversations.js et useMessages.js. Si l'utilisateur se connecte, la valeur en memoire reste null et les requetes suivantes echouent (401) jusqu'au rechargement manuel de la page.
 
-## 🧩 Components
+### 2. Reconnexion WebSocket
+*   Boucle infinie : L'evenement onclose dans le store websocket.js tente de se reconnecter toutes les 5 secondes sans verifier si la deconnexion a ete demandee par l'utilisateur (logout), ce qui genere des tentatives de reconnexion en boucle apres une deconnexion.
 
-- **HomeView.vue**: Main dashboard, shows conversations and invitations, handles accept/reject logic
-- **ConversationView.vue**: Chat interface for a single conversation
-- **NoInternetView.vue**: Offline fallback
-- **Auth/LoginView.vue & RegisterView.vue**: User authentication screens
-- **Profile/MeView.vue & SearchView.vue**: Profile management and user search
+### 3. Routeur et performances
+*   Auth synchrone : Le guard beforeEach du routeur verifie l'authentification via un appel HTTP a chaque changement de page, entrainant des lenteurs de navigation.
 
----
+### 4. Securite des cles et encodage
+*   localStorage : Les cles privees RSA et cles symetriques sont stockees en clair dans le localStorage du navigateur, vulnerables aux failles XSS.
+*   RangeError : L'utilisation de String.fromCharCode(...array) pour encoder le binaire en base64 risque de saturer la pile d'appel et de crasher le navigateur sur des messages volumineux.
 
-## 🛠️ Composables
+### 5. Fichiers
+*   Composable mocke : useFiles.js manipule les fichiers localement sans aucune interaction reseau avec le serveur.
 
-- **useAuth.js**: Handles login, registration, and user state
-- **useConversations.js**: Fetches conversations, invitations, and manages invitation logic
-- **useEncryption.js**: All cryptography (key generation, encryption/decryption)
-- **useMessages.js**: Message sending and retrieval
-- **useProfile.js**: Profile data and updates
+## Retrospective et alternatives techniques
 
----
-
-## ⚡ Store
-
-- **websocket.js**: Manages websocket connection and state for real-time messaging
-
----
-
-## 🚀 Setup & Usage
-
-```sh
-npm install      # Install dependencies
-npm run dev      # Start development server
-npm run build    # Build for production
-```
-
----
-
-## 🎨 Styling
-
-Custom CSS with TailWind and fonts for a modern, clean look. See `src/assets/main.css` and `title.ttf`.
-
----
-
-## 📝 Notes
-
-- This README is just for the frontend! For backend and full-stack info, see the associated README.
-- Built with Vue 3, Vite, Pinia, and modern practices (i think, i least i tried to).
-
----
-
-## 🕵️‍♂️ Found a Bug or Security Issue?
-
-If you discover anything wrong, buggy, or that allows bad interactions or actions, please let me know! Your feedback helps make Privy safer and better for everyone.
-
----
-
-## 🚧 Next Updates
-
-Here's what I plan to improve in the frontend in the next Update:
-
-- **Better key manager**: Move away from localStorage for key storage (not secure enough)
-- **Add refresh token**: Improve authentication and session management
-- **Optimize toast interactions**: Make notifications smoother and less intrusive
-- **Better UX for conversations**: Allow users to hide or leave conversations
-- **File parsing, encoding, and sending**: Integrate file handling with backend for secure file sharing
-- More improvements coming!
+*   Gestion reactive : Utiliser un store utilisateur global (Pinia) et des intercepteurs Axios pour gerer dynamiquement le token.
+*   Stockage des cles : Utiliser l'API Web Crypto pour stocker la cle dans IndexedDB en configurant l'option extractable sur false.
+*   Router optimiste : Valider le token en local via sa date d'expiration pour autoriser la navigation, et traiter l'erreur 401 reseau globalement pour rediriger vers la page de login en cas d'expiration effective.
+*   Deconnexion propre : Analyser le code de fermeture du socket pour eviter de lancer le timer de reconnexion lors d'un logout volontaire.
+*   Buffers : Encoder les donnees binaires par blocs plutot que d'injecter la totalite du tableau dans String.fromCharCode.
